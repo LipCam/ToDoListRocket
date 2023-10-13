@@ -1,5 +1,6 @@
 package br.com.lipcam.todolist.controller;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import br.com.lipcam.todolist.model.UserModel;
 import br.com.lipcam.todolist.repository.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,10 @@ public class UserController {
         UserModel userModel = iUserRepository.findByUserName(entity.getUserName());
         if(userModel != null)
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuário já existente.");
+
+        var pwsHashred = BCrypt.withDefaults().hashToString(12, entity.getPassword().toCharArray());
+
+        entity.setPassword(pwsHashred);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(iUserRepository.save(entity));
     }
