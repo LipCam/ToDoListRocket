@@ -2,6 +2,7 @@ package br.com.lipcam.todolist.controller;
 
 import br.com.lipcam.todolist.model.TaskModel;
 import br.com.lipcam.todolist.repository.ITaskRepository;
+import br.com.lipcam.todolist.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,5 +38,25 @@ public class TaskController {
     @GetMapping
     public ResponseEntity getAllByIdUser(HttpServletRequest request){
         return ResponseEntity.status(HttpStatus.OK).body(iTaskRepository.findByIdUser((UUID)request.getAttribute("idUser")));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity update(@RequestBody TaskModel entity, @PathVariable UUID id, HttpServletRequest request){
+
+        var task = iTaskRepository.findById(id).orElse(null);
+
+        if(task == null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tarefa nao encontrada");
+        }
+
+        var idUser = request.getAttribute("idUser");
+
+        if(!task.getIdUser().equals(idUser)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Usuario nao tem permissao para alterar essa tarefa");
+        }
+
+        Utils.copyNonNullProperties(entity,task);
+        var taskUptaded = iTaskRepository.save(task);
+        return ResponseEntity.ok().body(taskUptaded);
     }
 }
