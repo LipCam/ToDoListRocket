@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +23,15 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity create(@RequestBody TaskModel entity, HttpServletRequest request) {
+        var currentData = LocalDateTime.now();
+        if(currentData.isAfter(entity.getStartAt()) || currentData.isAfter(entity.getEndAt())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio/termino deve ser maior que a data atual");
+        }
+
+        if(entity.getStartAt().isAfter(entity.getEndAt())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A data de inicio deve ser menor que a data de termino");
+        }
+
         //recuperando o atributo do filter e setando no IdUser do Task
         entity.setIdUser((UUID)request.getAttribute("idUser"));
         return ResponseEntity.status(HttpStatus.CREATED).body(iTaskRepository.save(entity));
